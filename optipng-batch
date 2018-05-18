@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+import os
+import subprocess as sp
+import multiprocessing as mp
+from tqdm import tqdm
+
+OPTIPNG_BIN = "optipng"
+PNG_EXT = ".png"
+ROOT_DIR = "."
+COMMAND = [OPTIPNG_BIN, '-silent']
+
+
+def get_all_png_images():
+    """Get all paths to PNG paths from this directory of lower, recursively
+
+    Returns: array of paths, each represented as a string
+    """
+    result = []
+    for root, dirs, files in os.walk(ROOT_DIR):
+        result.extend([os.path.join(root, f) for f in files if PNG_EXT in f])
+    return result
+
+
+def optimize_png(png_path):
+    """Optimize the PNG at the given path using optipng
+
+    Args:
+            png_path: string path to the PNG, provided from `get_all_png_images`
+    """
+    cmd = list(COMMAND)
+    cmd.append(png_path)
+    sp.call(cmd)
+
+
+if __name__ == '__main__':
+    # Get paths to all PNG images for multiprocessing
+    png_images = get_all_png_images()
+    num_cpus = mp.cpu_count()
+    num_pngs = len(png_images)
+
+    # Print informational string
+    print("Using {} cores to process {} images...".format(num_cpus, num_pngs))
+
+    # Run processes on multiple cores
+    with mp.Pool(num_cpus) as pool:
+        for _ in tqdm(pool.imap_unordered(optimize_png, png_images)):
+            total = num_pngs
+        pass
